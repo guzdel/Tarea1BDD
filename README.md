@@ -1,4 +1,4 @@
-# Tarea 1 Bases de Datos
+# Tarea 1 Bases de Datos - Grupo 22
 ## Integrantes: 
   * Diego Álvarez - n°
   * Sofía Guzmán - 24641367
