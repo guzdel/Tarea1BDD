@@ -1,6 +1,6 @@
 # Tarea 1 Bases de Datos - Grupo 22
 ## Integrantes: 
-  * Diego Álvarez - n°
+  * Diego Álvarez - 23645318
   * Sofía Guzmán - 24641367
   * Joaquín Toro - 24641316
 
