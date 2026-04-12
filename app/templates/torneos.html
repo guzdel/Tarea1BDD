@@ -15,7 +15,7 @@
 	{% if torneos %}
 	<div class="tournament-grid">
 		{% for torneo in torneos %}
-		<a class="tournament-card" href="/torneos?torneo_id={{ torneo.id_torneo }}">
+		<a class="tournament-card" href="/torneos?torneo_id={{ torneo.id_torneo }}" >
 			<h3>{{ torneo.nombre }}</h3>
 			<p>{{ torneo.videojuego }}</p>
 			{% if torneo.fecha_inicio or torneo.fecha_fin %}
