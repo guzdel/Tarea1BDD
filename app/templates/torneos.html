@@ -112,7 +112,7 @@
 		{% if equipos_inscritos %}
 		<ul class="tag-list">
 			{% for equipo in equipos_inscritos %}
-			<li>{{ equipo.nombre }}</li>
+			<li>{{ equipo }}</li>
 			{% endfor %}
 		</ul>
 		{% else %}
@@ -125,7 +125,7 @@
 		{% if sponsors %}
 		<ul class="tag-list">
 			{% for sponsor in sponsors %}
-			<li>{{ sponsor.nombre }}</li>
+			<li>{{ sponsor }}</li>
 			{% endfor %}
 		</ul>
 		{% else %}

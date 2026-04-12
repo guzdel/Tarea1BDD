@@ -124,7 +124,16 @@ def torneos():
         sponsors=sponsors)
 
 #INSCRIPCIÓN
-
+@app.route('/inscripcion', methods=['GET', 'PUT'])
+def inscribir():
+    def inscribir():
+    torneos
+equipos
+error_message
+success_message
+torneo_seleccionado_id
+equipo_seleccionado_id
+cupos_torneo
 
 
 
