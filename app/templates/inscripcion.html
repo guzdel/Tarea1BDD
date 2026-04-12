@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Inscripción | Tarea 1 BD{% endblock %}
+
+{% block content %}
+<section class="panel section-stack">
+    <div>
+        <h2 class="section-title">Inscripción de Equipos</h2>
+        <p>
+            Registra la inscripción de un equipo en un torneo. Si el torneo ya alcanzó su cupo máximo,
+            se debe rechazar la inscripción mostrando un mensaje de error claro.
+        </p>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-error">{{ error_message }}</div>
+    {% endif %}
+
+    {% if success_message %}
+    <div class="alert alert-success">{{ success_message }}</div>
+    {% endif %}
+
+    <form class="filters-bar" method="post" action="/inscripcion">
+        <div class="field-group">
+            <label for="torneo_id">Torneo</label>
+            <select id="torneo_id" name="torneo_id" required>
+                <option value="">Selecciona un torneo</option>
+                {% for torneo in torneos %}
+                <option value="{{ torneo.id_torneo }}" {% if torneo_seleccionado_id and torneo.id_torneo == torneo_seleccionado_id %}selected{% endif %}>
+                    {{ torneo.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field-group">
+            <label for="equipo_id">Equipo</label>
+            <select id="equipo_id" name="equipo_id" required>
+                <option value="">Selecciona un equipo</option>
+                {% for equipo in equipos %}
+                <option value="{{ equipo.id_equipo }}" {% if equipo_seleccionado_id and equipo.id_equipo == equipo_seleccionado_id %}selected{% endif %}>
+                    {{ equipo.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field-group actions-group">
+            <button type="submit">Inscribir equipo</button>
+        </div>
+    </form>
+
+    {% if cupos_torneo %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Torneo</th>
+                    <th>Inscritos</th>
+                    <th>Máximo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cupo in cupos_torneo %}
+                <tr>
+                    <td>{{ cupo.nombre_torneo }}</td>
+                    <td>{{ cupo.inscritos_actuales }}</td>
+                    <td>{{ cupo.max_equipos }}</td>
+                    <td>
+                        {% if cupo.inscritos_actuales >= cupo.max_equipos %}
+                        <span class="badge badge-danger">Cupo completo</span>
+                        {% else %}
+                        <span class="badge badge-captain">Cupos disponibles</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if not torneos %}
+    <p class="empty-state">No hay torneos disponibles para inscripción.</p>
+    {% endif %}
+</section>
+{% endblock %}

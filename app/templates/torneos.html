@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Torneos | Tarea 1 BD{% endblock %}
+
+{% block content %}
+<section class="panel section-stack">
+	<div>
+		<h2 class="section-title">Torneos Disponibles</h2>
+		<p>
+			Selecciona un torneo para ver su fase de grupos, las partidas jugadas,
+			los equipos inscritos y los sponsors asociados.
+		</p>
+	</div>
+
+	{% if torneos %}
+	<div class="tournament-grid">
+		{% for torneo in torneos %}
+		<a class="tournament-card" href="/torneos?torneo_id={{ torneo.id_torneo }}">
+			<h3>{{ torneo.nombre }}</h3>
+			<p>{{ torneo.videojuego }}</p>
+			{% if torneo.fecha_inicio or torneo.fecha_fin %}
+			<p>
+				{{ torneo.fecha_inicio or "-" }}
+				{% if torneo.fecha_fin %} - {{ torneo.fecha_fin }}{% endif %}
+			</p>
+			{% endif %}
+		</a>
+		{% endfor %}
+	</div>
+	{% else %}
+	<p class="empty-state">No hay torneos registrados.</p>
+	{% endif %}
+</section>
+
+{% if torneo_seleccionado %}
+<section class="panel section-stack">
+	<div>
+		<h2 class="section-title">{{ torneo_seleccionado.nombre }}</h2>
+		<div class="meta-grid">
+			<p><strong>Videojuego:</strong> {{ torneo_seleccionado.videojuego }}</p>
+			<p><strong>Formato:</strong> Fase de grupos</p>
+		</div>
+	</div>
+
+	<div>
+		<h3>Tabla de Posiciones</h3>
+		{% if tabla_grupos %}
+		<div class="table-wrap">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>Equipo</th>
+						<th>PJ</th>
+						<th>G</th>
+						<th>E</th>
+						<th>P</th>
+						<th>Pts</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for fila in tabla_grupos %}
+					<tr>
+						<td>{{ fila.equipo }}</td>
+						<td>{{ fila.jugadas }}</td>
+						<td>{{ fila.ganadas }}</td>
+						<td>{{ fila.empatadas }}</td>
+						<td>{{ fila.perdidas }}</td>
+						<td><strong>{{ fila.puntos }}</strong></td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		<p>Puntaje: 3 puntos por victoria, 1 por empate y 0 por derrota.</p>
+		{% else %}
+		<p class="empty-state">No hay datos de fase de grupos para este torneo.</p>
+		{% endif %}
+	</div>
+
+	<div>
+		<h3>Partidas Jugadas</h3>
+		{% if partidas %}
+		<div class="table-wrap">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>Fecha</th>
+						<th>Equipo Local</th>
+						<th>Resultado</th>
+						<th>Equipo Visitante</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for partida in partidas %}
+					<tr>
+						<td>{{ partida.fecha }}</td>
+						<td>{{ partida.equipo_local }}</td>
+						<td>{{ partida.marcador_local }} - {{ partida.marcador_visitante }}</td>
+						<td>{{ partida.equipo_visitante }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+		<p class="empty-state">Todavia no hay partidas registradas.</p>
+		{% endif %}
+	</div>
+
+	<div>
+		<h3>Equipos Inscritos</h3>
+		{% if equipos_inscritos %}
+		<ul class="tag-list">
+			{% for equipo in equipos_inscritos %}
+			<li>{{ equipo.nombre }}</li>
+			{% endfor %}
+		</ul>
+		{% else %}
+		<p class="empty-state">No hay equipos inscritos para este torneo.</p>
+		{% endif %}
+	</div>
+
+	<div>
+		<h3>Sponsors</h3>
+		{% if sponsors %}
+		<ul class="tag-list">
+			{% for sponsor in sponsors %}
+			<li>{{ sponsor.nombre }}</li>
+			{% endfor %}
+		</ul>
+		{% else %}
+		<p class="empty-state">Este torneo no tiene sponsors registrados.</p>
+		{% endif %}
+	</div>
+</section>
+{% else %}
+<section class="panel">
+	<p class="empty-state">Haz click en un torneo para ver su detalle completo.</p>
+</section>
+{% endif %}
+
+{% endblock %}

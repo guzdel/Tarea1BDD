@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Búsqueda | Tarea 1 BD{% endblock %}
+
+{% block content %}
+<section class="panel section-stack">
+	<div>
+		<h2 class="section-title">Búsqueda de Jugadores</h2>
+		<p>
+			Busca jugadores por su gamertag o país de origen. Consulta el equipo al que pertenecen
+			y si son capitanes.
+		</p>
+	</div>
+
+	<form class="search-form" method="get" action="/busqueda">
+		<div class="search-grid">
+			<div class="field-group">
+				<label for="gamertag">Gamertag</label>
+				<input 
+					type="text" 
+					id="gamertag" 
+					name="gamertag" 
+					placeholder="Ej: ProPlayer123"
+					value="{{ gamertag or '' }}"
+				>
+			</div>
+			<div class="field-group">
+				<label for="pais">País de origen</label>
+				<select id="pais" name="pais">
+					<option value="">Todos los países</option>
+					{% for pais in paises %}
+					<option value="{{ pais }}" {% if pais == pais_seleccionado %}selected{% endif %}>
+						{{ pais }}
+					</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+		<div class="field-group actions-group full-width">
+			<button type="submit">Buscar jugadores</button>
+		</div>
+	</form>
+
+	{% if resultados %}
+	<div>
+		<h3>Resultados de búsqueda</h3>
+		{% if resultados|length > 0 %}
+		<p>Se encontraron {{ resultados|length }} jugador(es).</p>
+		{% endif %}
+	</div>
+
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Gamertag</th>
+					<th>País de origen</th>
+					<th>Equipo</th>
+					<th>Capitán</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for jugador in resultados %}
+				<tr>
+					<td>{{ jugador.gamertag }}</td>
+					<td>{{ jugador.pais }}</td>
+					<td>{{ jugador.equipo or "-" }}</td>
+					<td>
+						{% if jugador.es_capitan %}
+						<span class="badge badge-captain">✓ Sí</span>
+						{% else %}
+						<span class="badge badge-member">No</span>
+						{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% elif gamertag or pais_seleccionado %}
+	<p class="empty-state">No se encontraron jugadores con esos criterios de búsqueda.</p>
+	{% else %}
+	<p class="empty-state">Ingresa un gamertag o selecciona un país para buscar jugadores.</p>
+	{% endif %}
+</section>
+{% endblock %}

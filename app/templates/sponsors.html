@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Sponsors | Tarea 1 BD{% endblock %}
+
+{% block content %}
+<section class="panel section-stack">
+	<div>
+		<h2 class="section-title">Sponsors por Videojuego</h2>
+		<p>
+			Consulta los sponsors que han auspiciado todos los torneos de un videojuego específico.
+			Visualiza su nombre, industria y monto total aportado.
+		</p>
+	</div>
+
+	<form class="filters-bar" method="get" action="/sponsors">
+		<div class="field-group">
+			<label for="videojuego_id">Videojuego</label>
+			<select id="videojuego_id" name="videojuego_id">
+				<option value="">Selecciona un videojuego</option>
+				{% for videojuego in videojuegos %}
+				<option value="{{ videojuego.id_videojuego }}" {% if videojuego_seleccionado and videojuego.id_videojuego == videojuego_seleccionado.id_videojuego %}selected{% endif %}>
+					{{ videojuego.nombre }}
+				</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="field-group actions-group">
+			<button type="submit">Ver sponsors</button>
+		</div>
+	</form>
+
+	{% if videojuego_seleccionado %}
+	<div>
+		<h3>{{ videojuego_seleccionado.nombre }}</h3>
+		<p>
+			Sponsors que han auspiciado todos los torneos de {{ videojuego_seleccionado.nombre }}.
+		</p>
+	</div>
+
+	{% if sponsors %}
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Nombre del Sponsor</th>
+					<th>Industria</th>
+					<th>Monto Total Aportado</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for sponsor in sponsors %}
+				<tr>
+					<td>{{ sponsor.nombre }}</td>
+					<td>{{ sponsor.industria }}</td>
+					<td class="amount">{{ sponsor.monto_total }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% else %}
+	<p class="empty-state">No hay sponsors registrados para este videojuego.</p>
+	{% endif %}
+	{% else %}
+	<p class="empty-state">Selecciona un videojuego para consultar sus sponsors.</p>
+	{% endif %}
+</section>
+{% endblock %}

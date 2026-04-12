@@ -1,16 +1,45 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Tarea 1</title>
-    </head>
-    <body>
-        <form action="greet" method="post">
-            <p>whats your name?</p>
-            <br>
-            <input type="text" name="name_input">
-            <br>
-            <input type="submit" value="GREET" id="greet"> 
-        </form>
-    </body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="panel hero">
+    <div>
+        <p>Centro de navegación</p>
+        <h2>Explora la plataforma desde una sola página de inicio.</h2>
+        <p>
+            Desde aquí puedes ir directamente a cada vista de la aplicación para consultar torneos,
+            revisar estadísticas, buscar información, ver sponsors o inscribir un equipo.
+        </p>
+        <div class="hero-actions">
+            <a class="button-link" href="/torneos">Ir a Torneos</a>
+            <a class="button-link secondary" href="/estadisticas">Ver Estadísticas</a>
+        </div>
+    </div>
+
+    <div>
+        <div class="quick-grid">
+            <a class="quick-card" href="/torneos">
+                <h3>Torneos</h3>
+                <p>Lista de torneos, tabla de posiciones, partidas y sponsors asociados.</p>
+            </a>
+            <a class="quick-card" href="/estadisticas">
+                <h3>Estadísticas</h3>
+                <p>Ranking de jugadores y evolución por fases del torneo.</p>
+            </a>
+            <a class="quick-card" href="/busqueda">
+                <h3>Búsqueda</h3>
+                <p>Busca jugadores y equipos por distintos criterios.</p>
+            </a>
+            <a class="quick-card" href="/sponsors">
+                <h3>Sponsors</h3>
+                <p>Consulta los sponsors por videojuego y su aporte total.</p>
+            </a>
+            <a class="quick-card" href="/inscripcion">
+                <h3>Inscripción</h3>
+                <p>Inscribe un equipo a un torneo disponible.</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Estadísticas | Tarea 1 BD{% endblock %}
+
+{% block content %}
+<section class="panel section-stack">
+	<div>
+		<h2 class="section-title">Estadísticas</h2>
+		<p>
+			Consulta el ranking de jugadores por torneo y la evolución promedio de un equipo
+			entre fase de grupos y fases eliminatorias.
+		</p>
+	</div>
+
+	<form class="filters-bar" method="get" action="/estadisticas">
+		<div class="field-group">
+			<label for="torneo_id">Torneo</label>
+			<select id="torneo_id" name="torneo_id">
+				<option value="">Selecciona un torneo</option>
+				{% for torneo in torneos %}
+				<option value="{{ torneo.id_torneo }}" {% if torneo_seleccionado and torneo.id_torneo == torneo_seleccionado.id_torneo %}selected{% endif %}>
+					{{ torneo.nombre }}
+				</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="field-group actions-group">
+			<button type="submit">Ver ranking</button>
+		</div>
+	</form>
+
+	{% if torneo_seleccionado %}
+	<div>
+		<h3>{{ torneo_seleccionado.nombre }}</h3>
+		<p>
+			Ranking de jugadores ordenado por ratio KOs / restarts, considerando solo jugadores
+			con al menos 2 partidas en este torneo.
+		</p>
+	</div>
+
+	{% if ranking_jugadores %}
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Gamertag</th>
+					<th>Equipo</th>
+					<th>Total KOs</th>
+					<th>Restarts</th>
+					<th>Assists</th>
+					<th>Ratio KOs/Restarts</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for jugador in ranking_jugadores %}
+				<tr>
+					<td>{{ jugador.gamertag }}</td>
+					<td>{{ jugador.equipo }}</td>
+					<td>{{ jugador.total_kos }}</td>
+					<td>{{ jugador.restarts }}</td>
+					<td>{{ jugador.assists }}</td>
+					<td>{{ jugador.ratio }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% else %}
+	<p class="empty-state">No hay jugadores suficientes para calcular el ranking de este torneo.</p>
+	{% endif %}
+	{% else %}
+	<p class="empty-state">Selecciona un torneo para ver el ranking de jugadores.</p>
+	{% endif %}
+</section>
+
+<section class="panel section-stack">
+	<div>
+		<h3>Evolución por fase de un equipo</h3>
+		<p>
+			Compara las estadísticas promedio por jugador entre fase de grupos y fases eliminatorias
+			(semifinal + final).
+		</p>
+	</div>
+
+	<form class="filters-bar" method="get" action="/estadisticas">
+		<div class="field-group">
+			<label for="equipo_id">Equipo</label>
+			<select id="equipo_id" name="equipo_id">
+				<option value="">Selecciona un equipo</option>
+				{% for equipo in equipos %}
+				<option value="{{ equipo.id_equipo }}" {% if equipo_seleccionado and equipo.id_equipo == equipo_seleccionado.id_equipo %}selected{% endif %}>
+					{{ equipo.nombre }}
+				</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="field-group actions-group">
+			<button type="submit">Comparar fases</button>
+		</div>
+	</form>
+
+	{% if equipo_seleccionado %}
+	<div>
+		<h3>{{ equipo_seleccionado.nombre }}</h3>
+	</div>
+
+	{% if evolucion_fases %}
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Métrica</th>
+					<th>Fase de grupos</th>
+					<th>Semifinal + Final</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>KOs promedio por jugador</td>
+					<td>{{ evolucion_fases.grupos.kos }}</td>
+					<td>{{ evolucion_fases.eliminatorias.kos }}</td>
+				</tr>
+				<tr>
+					<td>Restarts promedio por jugador</td>
+					<td>{{ evolucion_fases.grupos.restarts }}</td>
+					<td>{{ evolucion_fases.eliminatorias.restarts }}</td>
+				</tr>
+				<tr>
+					<td>Assists promedio por jugador</td>
+					<td>{{ evolucion_fases.grupos.assists }}</td>
+					<td>{{ evolucion_fases.eliminatorias.assists }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	{% else %}
+	<p class="empty-state">No hay datos suficientes para comparar la evolución por fase de este equipo.</p>
+	{% endif %}
+	{% else %}
+	<p class="empty-state">Selecciona un equipo para comparar su evolución por fase.</p>
+	{% endif %}
+</section>
+{% endblock %}
