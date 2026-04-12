@@ -83,4 +83,66 @@
 	<p class="empty-state">Ingresa un gamertag o selecciona un país para buscar jugadores.</p>
 	{% endif %}
 </section>
+
+<section class="panel section-stack">
+	<div>
+		<h2 class="section-title">Búsqueda de Equipos</h2>
+		<p>
+			Busca equipos por su nombre y consulta su fecha de creación junto con el torneo
+			al que están inscritos.
+		</p>
+	</div>
+
+	<form class="search-form" method="get" action="/busqueda">
+		<div class="search-grid">
+			<div class="field-group">
+				<label for="nombre_equipo">Nombre del equipo</label>
+				<input
+					type="text"
+					id="nombre_equipo"
+					name="nombre_equipo"
+					placeholder="Ej: Team Phoenix"
+					value="{{ nombre_equipo or '' }}"
+				>
+			</div>
+		</div>
+		<div class="field-group actions-group full-width">
+			<button type="submit">Buscar equipos</button>
+		</div>
+	</form>
+
+	{% if resultados_equipos %}
+	<div>
+		<h3>Resultados de equipos</h3>
+		{% if resultados_equipos|length > 0 %}
+		<p>Se encontraron {{ resultados_equipos|length }} equipo(s).</p>
+		{% endif %}
+	</div>
+
+	<div class="table-wrap">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>Nombre</th>
+					<th>Fecha de creación</th>
+					<th>Torneo inscrito</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for equipo in resultados_equipos %}
+				<tr>
+					<td>{{ equipo.nombre }}</td>
+					<td>{{ equipo.fecha_creacion or "-" }}</td>
+					<td>{{ equipo.torneo_inscrito or "-" }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% elif nombre_equipo %}
+	<p class="empty-state">No se encontraron equipos con ese nombre.</p>
+	{% else %}
+	<p class="empty-state">Ingresa un nombre de equipo para realizar la búsqueda.</p>
+	{% endif %}
+</section>
 {% endblock %}
