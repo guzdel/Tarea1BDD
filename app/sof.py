@@ -1,16 +1,17 @@
 from flask import Flask, render_template, request, flash
 import psycopg2
+import os
 
 app = Flask(__name__)
 
 def conectar_a_bdd():
-    conn = psycopg2.connect(
-        host="localhost",
-        dbname="postgres",
-        user="postgres",
-        password="postgres"
+    return psycopg2.connect(
+        host=os.environ.get('DB_HOST', 'localhost'),
+        port=os.environ.get('DB_PORT', 5432),
+        user=os.environ.get('DB_USER', 'postgres'),
+        password=os.environ.get('DB_PASSWORD', 'postgres'),
+        database=os.environ.get('DB_NAME', 'tarea1')
     )
-    return conn
 
 
 @app.route("/")
@@ -124,16 +125,100 @@ def torneos():
         sponsors=sponsors)
 
 #INSCRIPCIÓN
-@app.route('/inscripcion', methods=['GET', 'PUT'])
+@app.route('/inscripcion', methods=['GET', 'POST'])
 def inscribir():
-    def inscribir():
-    torneos
-equipos
-error_message
-success_message
-torneo_seleccionado_id
-equipo_seleccionado_id
-cupos_torneo
+    torneos = None
+    equipos = None
+    error_message = None
+    success_message = None
+    torneo_seleccionado_id = None
+    equipo_seleccionado_id = None
+    cupos_torneo = None
+    
+    conn = conectar_a_bdd()
+    cur = conn.cursor()
+    if request.method == 'POST':
+        torneo_seleccionado_id = request.form.get("torneo_id", type=int)
+        equipo_seleccionado_id = request.form.get("equipo_id", type=int)
+
+        if torneo_seleccionado_id != None and equipo_seleccionado_id != None:
+
+        
+            #max
+            cur.execute("""SELECT max_equipos FROM Torneos
+                        WHERE id_torneo = %s""", (torneo_seleccionado_id, ))
+            max_inscripcion = cur.fetchone()[0]
+            
+            #actuales
+            cur.execute("""SELECT id_equipo FROM inscripcion WHERE
+                        id_torneo = %s""", (torneo_seleccionado_id, ))
+            inscritos_actuales = [x[0] for x in cur.fetchall()]
+            n_actuales = len(inscritos_actuales)
+
+            if max_inscripcion > n_actuales and equipo_seleccionado_id not in inscritos_actuales:
+                try:
+                    cur.execute("""
+                    INSERT INTO Inscripcion (id_torneo, id_equipo)
+                    VALUES (%s, %s)
+                """, (torneo_seleccionado_id, equipo_seleccionado_id))
+                    conn.commit()
+                    success_message = '200'
+                except Exception as e:
+                    error_message = f"No se pudo realizar la inscripción: {e}"
+            else:
+                error_message = f"No se pudo realizar la inscripción"
+        else:
+            error_message = f"No se pudo realizar la inscripción"
+    
+    cur.execute('SELECT * FROM Torneos')
+    torneos = cur.fetchall()
+    torneos = [{
+                "id_torneo": f[0],
+                "nombre": f[1],
+                "videojuego": f[2],
+                "fecha_inicio": f[3],
+                "fecha_fin": f[4]
+            } for f in torneos]
+    
+    cur.execute('SELECT id_equipo, nombre FROM Equipos')
+    filas_equipos = cur.fetchall()
+    equipos = [{
+        "id_equipo": f[0],
+        "nombre": f[1]
+    } for f in filas_equipos]
+
+    cur.execute("""
+        SELECT
+            t.nombre,
+            COUNT(i.id_equipo) AS inscritos_actuales,
+            t.max_equipos
+        FROM Torneos t
+        LEFT JOIN Inscripcion i ON t.id_torneo = i.id_torneo
+        GROUP BY t.id_torneo, t.nombre, t.max_equipos
+        ORDER BY t.id_torneo
+    """)
+
+    cupos_torneo = [{
+        "nombre_torneo": f[0],
+        "inscritos_actuales": f[1],
+        "max_equipos": f[2]
+    } for f in cur.fetchall()]
+
+
+    
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "inscripcion.html",
+        torneos=torneos,
+        equipos=equipos,
+        cupos_torneo=cupos_torneo,
+        error_message=error_message,
+        success_message=success_message,
+        torneo_seleccionado_id=torneo_seleccionado_id,
+        equipo_seleccionado_id=equipo_seleccionado_id)
 
 
 
