@@ -14,12 +14,12 @@
 
 	<form class="filters-bar" method="get" action="/sponsors">
 		<div class="field-group">
-			<label for="videojuego_id">Videojuego</label>
-			<select id="videojuego_id" name="videojuego_id">
+			<label for="videojuego_seleccionado">Videojuego</label>
+			<select id="videojuego_seleccionado" name="videojuego_seleccionado">
 				<option value="">Selecciona un videojuego</option>
 				{% for videojuego in videojuegos %}
-				<option value="{{ videojuego.id_videojuego }}" {% if videojuego_seleccionado and videojuego.id_videojuego == videojuego_seleccionado.id_videojuego %}selected{% endif %}>
-					{{ videojuego.nombre }}
+				<option value="{{ videojuego }}" {% if videojuego == videojuego_seleccionado %}selected{% endif %}>
+					{{ videojuego }}
 				</option>
 				{% endfor %}
 			</select>
@@ -31,9 +31,9 @@
 
 	{% if videojuego_seleccionado %}
 	<div>
-		<h3>{{ videojuego_seleccionado.nombre }}</h3>
+		<h3>{{ videojuego_seleccionado }}</h3>
 		<p>
-			Sponsors que han auspiciado todos los torneos de {{ videojuego_seleccionado.nombre }}.
+			Sponsors que han auspiciado todos los torneos de {{ videojuego_seleccionado }}.
 		</p>
 	</div>
 
