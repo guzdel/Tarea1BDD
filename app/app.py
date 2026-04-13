@@ -42,7 +42,7 @@ def torneos():
                 "fecha_fin": f[4]
             } for f in torneos]
 
-    
+
     torneo_id = request.args.get('torneo_id', default=None, type=int)
 
     if torneo_id != None:
@@ -57,7 +57,7 @@ def torneos():
                 "fecha_inicio": ts[3],
                 "fecha_fin": ts[4]
             }
-        
+
         #Partidas del torneo
         cur.execute("""SELECT p.fecha, e1.nombre, p.puntaje_a, p.puntaje_b, e2.nombre
             FROM Partidas p
@@ -137,37 +137,46 @@ def busqueda():
     gamertag = request.args.get('gamertag')
     pais = request.args.get('pais')
 
-    if gamertag is None and pais is None:
+    if gamertag is None and pais is None:  # Para el primer request
         cur.execute('SELECT DISTINCT pais FROM jugadores')
         paises = [x[0] for x in cur.fetchall()]
         cur.close()
         conn.close()
         return render_template("busqueda.html", paises=paises)
+    print('ARGUMENTOS: ',gamertag, pais)
+    if pais != 'todos':
+        query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
+                    CASE
+                        WHEN c.gamertag IS NOT NULL THEN 'Sí'
+                        ELSE 'No'
+                    END AS es_capitan
+                    FROM jugadores j
+                    NATURAL JOIN  pertenece_a p
+                    JOIN equipos e ON p.id_equipo = e.id_equipo
+                    LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
+                    WHERE j.gamertag LIKE %(gamertag)s AND j.pais = %(pais)s '''
+        cur.execute(query, {'gamertag': '%{}%'.format(gamertag), 'pais': pais})
+    else:
+        query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
+                    CASE
+                        WHEN c.gamertag IS NOT NULL THEN 'Sí'
+                        ELSE 'No'
+                    END AS es_capitan
+                    FROM jugadores j
+                    NATURAL JOIN  pertenece_a p
+                    JOIN equipos e ON p.id_equipo = e.id_equipo
+                    LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
+                    WHERE j.gamertag LIKE %(gamertag)s '''
+        cur.execute(query, {'gamertag': '%{}%'.format(gamertag)})
 
-    query = '''SELECT 
-	            j.gamertag,
-	            j.pais,
-	            e.nombre AS nombre_equipo,
-	            CASE
-		            WHEN c.gamertag IS NOT NULL THEN 'Sí'
-		            ELSE 'No'
-	            END AS es_capitan
-                FROM jugadores j
-                NATURAL JOIN  pertenece_a p
-                JOIN equipos e ON p.id_equipo = e.id_equipo
-                LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
-                WHERE j.gamertag LIKE '%ph%' AND j.pais = 'Chile' '''
-    cur.execute(query, {'gamertag': gamertag, 'pais': pais})
     jugadores = cur.fetchall()
     jugadores = [{
                 "gamertag": f[0],
-                "nombre": f[1],
-                "email": f[2],
-                "nacimiento": f[3],
-                "pais": f[4]
-            } for f in jugadores]
+                "pais": f[1],
+                "nombre_equipo": f[2],
+                "es_capitan": f[3]} for f in jugadores]
     cur.execute('SELECT DISTINCT pais FROM jugadores')
-    paises = [x for x in cur.fetchall()]
+    paises = [x[0] for x in cur.fetchall()]
     cur.close()
     conn.close()
     return render_template("busqueda.html", resultados=jugadores, paises=paises)
