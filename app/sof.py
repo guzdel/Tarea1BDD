@@ -220,7 +220,35 @@ def inscribir():
         torneo_seleccionado_id=torneo_seleccionado_id,
         equipo_seleccionado_id=equipo_seleccionado_id)
 
+@app.route('/sponsors', methods=['GET'])
+def mostrar_sponsors():
 
+    videojuego_seleccionado = request.args.get('videojuego_seleccionado', default=None, type=str)
+    sponsors = None
+    conn = conectar_a_bdd()
+    cur = conn.cursor()
+
+    cur.execute("""SELECT DISTINCT videojuego FROM torneos""")
+    videojuegos = [x[0] for x in cur.fetchall()]
+
+    if videojuego_seleccionado != None:
+
+
+        cur.execute("""SELECT s.nombre, s.industria, s.monto
+                    FROM Sponsor s
+                    JOIN Auspicia_a a
+                    ON s.nombre = a.nombre_sponsor
+                    JOIN Torneos t
+                    ON a.id_torneo = t.id_torneo
+                    WHERE t.videojuego = %s""", (videojuego_seleccionado, ))
+        
+        sponsors = ({'nombre':x[0], 'industria':x[1], 'monto':x[2]} for x in cur.fetchall())
+
+    cur.close()
+    conn.close()
+    return render_template("sponsors.html", videojuego_seleccionado=videojuego_seleccionado,
+                           sponsors=sponsors,
+                           videojuegos=videojuegos)
 
 if __name__ == "__main__":
     app.run(debug=True)

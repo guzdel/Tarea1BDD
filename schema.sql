@@ -74,12 +74,12 @@ CREATE TABLE Estadisticas_individuales (
 
 CREATE TABLE Sponsor (
     nombre VARCHAR(100) PRIMARY KEY,
-    industria VARCHAR(100)
+    industria VARCHAR(100),
+    monto DECIMAL(12, 2) CHECK (monto >= 0)
 );
 
 CREATE TABLE Auspicia_a (
     nombre_sponsor VARCHAR(100) REFERENCES Sponsor(nombre) ON DELETE CASCADE,
     id_torneo INTEGER REFERENCES Torneos(id_torneo) ON DELETE CASCADE,
-    monto DECIMAL(12, 2) CHECK (monto >= 0),
     PRIMARY KEY (nombre_sponsor, id_torneo)
 );
