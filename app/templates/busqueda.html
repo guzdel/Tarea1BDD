@@ -27,7 +27,7 @@
 			<div class="field-group">
 				<label for="pais">País de origen</label>
 				<select id="pais" name="pais">
-					<option value="">Todos los países</option>
+					<option value="todos">Todos los países</option>
 					{% for pais in paises %}
 					<option value="{{ pais }}" {% if pais == pais_seleccionado %}selected{% endif %}>
 						{{ pais }}
@@ -66,7 +66,7 @@
 					<td>{{ jugador.pais }}</td>
 					<td>{{ jugador.equipo or "-" }}</td>
 					<td>
-						{% if jugador.es_capitan %}
+						{% if jugador.es_capitan == "Sí" %}
 						<span class="badge badge-captain">✓ Sí</span>
 						{% else %}
 						<span class="badge badge-member">No</span>
