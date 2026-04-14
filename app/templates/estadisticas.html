@@ -133,12 +133,12 @@
 				{% for jugador in evolucion_jugadores %}
 				<tr>
 					<td>{{ jugador.gamertag }}</td>
-					<td>{{ jugador.grupos.kos }}</td>
-					<td>{{ jugador.eliminatorias.kos }}</td>
-					<td>{{ jugador.grupos.restarts }}</td>
-					<td>{{ jugador.eliminatorias.restarts }}</td>
-					<td>{{ jugador.grupos.assists }}</td>
-					<td>{{ jugador.eliminatorias.assists }}</td>
+					<td>{{ jugador.grupos_kos }}</td>
+					<td>{{ jugador.eliminatorias_kos }}</td>
+					<td>{{ jugador.grupos_restarts }}</td>
+					<td>{{ jugador.eliminatorias_restarts }}</td>
+					<td>{{ jugador.grupos_assists }}</td>
+					<td>{{ jugador.eliminatorias_assists }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>
