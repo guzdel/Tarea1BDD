@@ -106,25 +106,25 @@ def torneos():
                     GROUP BY e.id_equipo, e.nombre
                     ORDER BY puntos DESC, ganadas DESC, e.nombre ASC
                     """, (torneo_id, torneo_id))
-        
+
         tabla_grupos = [{"equipo": f[0],
                           "jugadas": f[1],
                           "ganadas": f[2],
                           "empatadas": f[3],
                           "perdidas": f[4],
                           "puntos": f[5]} for f in cur.fetchall()]
- 
+
     cur.close()
     conn.close()
     return render_template("torneos.html",
-        torneos=torneos,
-        torneo_seleccionado=torneo_seleccionado,
-        partidas=partidas,
-        tabla_grupos=tabla_grupos,
-        equipos_inscritos=equipos_inscritos,
-        sponsors=sponsors)
+                           torneos=torneos,
+                           torneo_seleccionado=torneo_seleccionado,
+                           partidas=partidas,
+                           tabla_grupos=tabla_grupos,
+                           equipos_inscritos=equipos_inscritos,
+                           sponsors=sponsors)
 
-#INSCRIPCIÓN
+# INSCRIPCIÓN
 @app.route('/inscripcion', methods=['GET', 'POST'])
 def inscribir():
     torneos = None
@@ -134,7 +134,7 @@ def inscribir():
     torneo_seleccionado_id = None
     equipo_seleccionado_id = None
     cupos_torneo = None
-    
+
     conn = conectar_a_bdd()
     cur = conn.cursor()
     if request.method == 'POST':
@@ -143,13 +143,12 @@ def inscribir():
 
         if torneo_seleccionado_id != None and equipo_seleccionado_id != None:
 
-        
-            #max
+            # max
             cur.execute("""SELECT max_equipos FROM Torneos
                         WHERE id_torneo = %s""", (torneo_seleccionado_id, ))
             max_inscripcion = cur.fetchone()[0]
-            
-            #actuales
+
+            # actuales
             cur.execute("""SELECT id_equipo FROM inscripcion WHERE
                         id_torneo = %s""", (torneo_seleccionado_id, ))
             inscritos_actuales = [x[0] for x in cur.fetchall()]
@@ -178,7 +177,7 @@ def inscribir():
                 "fecha_inicio": f[3],
                 "fecha_fin": f[4]
             } for f in torneos]
-    
+
     cur.execute('SELECT id_equipo, nombre FROM Equipos')
     filas_equipos = cur.fetchall()
     equipos = [{
@@ -203,12 +202,8 @@ def inscribir():
         "max_equipos": f[2]
     } for f in cur.fetchall()]
 
-
-    
-
     cur.close()
     conn.close()
-
     return render_template(
         "inscripcion.html",
         torneos=torneos,
@@ -219,10 +214,11 @@ def inscribir():
         torneo_seleccionado_id=torneo_seleccionado_id,
         equipo_seleccionado_id=equipo_seleccionado_id)
 
+
 @app.route('/sponsors', methods=['GET'])
 def mostrar_sponsors():
-
-    videojuego_seleccionado = request.args.get('videojuego_seleccionado', default=None, type=str)
+    videojuego_seleccionado = request.args.get(
+        'videojuego_seleccionado', default=None, type=str)
     sponsors = None
     conn = conectar_a_bdd()
     cur = conn.cursor()
@@ -231,8 +227,6 @@ def mostrar_sponsors():
     videojuegos = [x[0] for x in cur.fetchall()]
 
     if videojuego_seleccionado != None:
-
-
         cur.execute("""SELECT s.nombre, s.industria, s.monto
                     FROM Sponsor s
                     JOIN Auspicia_a a
@@ -240,14 +234,17 @@ def mostrar_sponsors():
                     JOIN Torneos t
                     ON a.id_torneo = t.id_torneo
                     WHERE t.videojuego = %s""", (videojuego_seleccionado, ))
-        
-        sponsors = ({'nombre':x[0], 'industria':x[1], 'monto':x[2]} for x in cur.fetchall())
+
+        sponsors = ({'nombre': x[0], 'industria': x[1], 'monto': x[2]}
+                    for x in cur.fetchall())
 
     cur.close()
     conn.close()
-    return render_template("sponsors.html", videojuego_seleccionado=videojuego_seleccionado,
+    return render_template("sponsors.html",
+                           videojuego_seleccionado=videojuego_seleccionado,
                            sponsors=sponsors,
                            videojuegos=videojuegos)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -20,8 +20,8 @@ def index():
 
 @app.route("/torneos/", methods=['GET'])
 def torneos():
-    
-    #argumentos por default
+
+    # argumentos por default
     torneos = None
     torneo_seleccionado = None
     tabla_grupos = None
@@ -31,7 +31,7 @@ def torneos():
 
     conn = conectar_a_bdd()
     cur = conn.cursor()
-    
+
     cur.execute('SELECT * FROM Torneos')
     torneos = cur.fetchall()
     torneos = [{
@@ -47,7 +47,7 @@ def torneos():
 
     if torneo_id != None:
 
-        #info general del torneo seleccionado
+        # info general del torneo seleccionado
         cur.execute("""SELECT * FROM Torneos WHERE id_torneo = %s""", (torneo_id,))
         ts = cur.fetchone()
         torneo_seleccionado = {
@@ -58,7 +58,7 @@ def torneos():
                 "fecha_fin": ts[4]
             }
 
-        #Partidas del torneo
+        # Partidas del torneo
         cur.execute("""SELECT p.fecha, e1.nombre, p.puntaje_a, p.puntaje_b, e2.nombre
             FROM Partidas p
             JOIN Equipos e1 ON p.id_equipo_a = e1.id_equipo
@@ -75,19 +75,19 @@ def torneos():
                     "equipo_visitante": f[4]
                 }
                 for f in partidas]
-        
-        #Equipos inscritos
+
+        # Equipos inscritos
         cur.execute("""SELECT e.nombre 
                     FROM inscripcion i JOIN equipos e ON i.id_equipo = e.id_equipo
                     WHERE i.id_torneo = %s""", (torneo_id,))
         equipos_inscritos = [x[0] for x in cur.fetchall()]
 
-        #Sponsors
+        # Sponsors
         cur.execute("""SELECT nombre_sponsor FROM auspicia_a
                     WHERE id_torneo = %s""", (torneo_id,))
         sponsors = [x[0] for x in cur.fetchall()]
 
-        #Tabla posiciones
+        # Tabla posiciones
         cur.execute("""SELECT e.nombre, COUNT(*) AS jugadas,
                     SUM(CASE WHEN sub.gf > sub.gc THEN 1 ELSE 0 END) AS ganadas,
                     SUM(CASE WHEN sub.gf = sub.gc THEN 1 ELSE 0 END) AS empatadas,
@@ -107,14 +107,14 @@ def torneos():
                     GROUP BY e.id_equipo, e.nombre
                     ORDER BY puntos DESC, ganadas DESC, e.nombre ASC
                     """, (torneo_id, torneo_id))
-        
+
         tabla_grupos = [{"equipo": f[0],
                           "jugadas": f[1],
                           "ganadas": f[2],
                           "empatadas": f[3],
                           "perdidas": f[4],
                           "puntos": f[5]} for f in cur.fetchall()]
- 
+
     cur.close()
     conn.close()
     return render_template("torneos.html",
@@ -125,61 +125,257 @@ def torneos():
         equipos_inscritos=equipos_inscritos,
         sponsors=sponsors)
 
-#INSCRIPCIÓN
+# INSCRIPCIÓN
+@app.route('/inscripcion', methods=['GET', 'POST'])
+def inscribir():
+    torneos = None
+    equipos = None
+    error_message = None
+    success_message = None
+    torneo_seleccionado_id = None
+    equipo_seleccionado_id = None
+    cupos_torneo = None
+
+    conn = conectar_a_bdd()
+    cur = conn.cursor()
+    if request.method == 'POST':
+        torneo_seleccionado_id = request.form.get("torneo_id", type=int)
+        equipo_seleccionado_id = request.form.get("equipo_id", type=int)
+
+        if torneo_seleccionado_id != None and equipo_seleccionado_id != None:
+
+            # max
+            cur.execute("""SELECT max_equipos FROM Torneos
+                        WHERE id_torneo = %s""", (torneo_seleccionado_id, ))
+            max_inscripcion = cur.fetchone()[0]
+
+            # actuales
+            cur.execute("""SELECT id_equipo FROM inscripcion WHERE
+                        id_torneo = %s""", (torneo_seleccionado_id, ))
+            inscritos_actuales = [x[0] for x in cur.fetchall()]
+            n_actuales = len(inscritos_actuales)
+
+            if max_inscripcion > n_actuales and equipo_seleccionado_id not in inscritos_actuales:
+                try:
+                    cur.execute("""
+                    INSERT INTO Inscripcion (id_torneo, id_equipo)
+                    VALUES (%s, %s)
+                """, (torneo_seleccionado_id, equipo_seleccionado_id))
+                    conn.commit()
+                    success_message = '200'
+                except Exception as e:
+                    error_message = f"No se pudo realizar la inscripción: {e}"
+            else:
+                error_message = f"No se pudo realizar la inscripción"
+        else:
+            error_message = f"No se pudo realizar la inscripción"
+
+    cur.execute('SELECT * FROM Torneos')
+    torneos = cur.fetchall()
+    torneos = [{
+                "id_torneo": f[0],
+                "nombre": f[1],
+                "videojuego": f[2],
+                "fecha_inicio": f[3],
+                "fecha_fin": f[4]
+            } for f in torneos]
+
+    cur.execute('SELECT id_equipo, nombre FROM Equipos')
+    filas_equipos = cur.fetchall()
+    equipos = [{
+        "id_equipo": f[0],
+        "nombre": f[1]
+    } for f in filas_equipos]
+
+    cur.execute("""
+        SELECT
+            t.nombre,
+            COUNT(i.id_equipo) AS inscritos_actuales,
+            t.max_equipos
+        FROM Torneos t
+        LEFT JOIN Inscripcion i ON t.id_torneo = i.id_torneo
+        GROUP BY t.id_torneo, t.nombre, t.max_equipos
+        ORDER BY t.id_torneo
+    """)
+
+    cupos_torneo = [{
+        "nombre_torneo": f[0],
+        "inscritos_actuales": f[1],
+        "max_equipos": f[2]
+    } for f in cur.fetchall()]
+
+    cur.close()
+    conn.close()
+    return render_template(
+        "inscripcion.html",
+        torneos=torneos,
+        equipos=equipos,
+        cupos_torneo=cupos_torneo,
+        error_message=error_message,
+        success_message=success_message,
+        torneo_seleccionado_id=torneo_seleccionado_id,
+        equipo_seleccionado_id=equipo_seleccionado_id)
+
+# SPONSORS
+@app.route('/sponsors', methods=['GET'])
+def mostrar_sponsors():
+    videojuego_seleccionado = request.args.get(
+        'videojuego_seleccionado', default=None, type=str)
+    sponsors = None
+    conn = conectar_a_bdd()
+    cur = conn.cursor()
+
+    cur.execute("""SELECT DISTINCT videojuego FROM torneos""")
+    videojuegos = [x[0] for x in cur.fetchall()]
+
+    if videojuego_seleccionado != None:
+        cur.execute("""SELECT s.nombre, s.industria, s.monto
+                    FROM Sponsor s
+                    JOIN Auspicia_a a
+                    ON s.nombre = a.nombre_sponsor
+                    JOIN Torneos t
+                    ON a.id_torneo = t.id_torneo
+                    WHERE t.videojuego = %s""", (videojuego_seleccionado, ))
+
+        sponsors = ({'nombre': x[0], 'industria': x[1], 'monto': x[2]}
+                    for x in cur.fetchall())
+
+    cur.close()
+    conn.close()
+    return render_template("sponsors.html",
+                           videojuego_seleccionado=videojuego_seleccionado,
+                           sponsors=sponsors,
+                           videojuegos=videojuegos)
 
 
-
-
+# BUSQUEDA
 @app.route("/busqueda", methods=["GET"])
 def busqueda():
     conn = conectar_a_bdd()
     cur = conn.cursor()
     gamertag = request.args.get('gamertag')
     pais = request.args.get('pais')
+    nombre_equipo = request.args.get('nombre_equipo')
 
-    if gamertag is None and pais is None:  # Para el primer request
+    if gamertag is None and pais is None and nombre_equipo is None:  # Para el primer request
         cur.execute('SELECT DISTINCT pais FROM jugadores')
         paises = [x[0] for x in cur.fetchall()]
         cur.close()
         conn.close()
+        print('Entregando paises para la lista')
         return render_template("busqueda.html", paises=paises)
-    print('ARGUMENTOS: ',gamertag, pais)
-    if pais != 'todos':
-        query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
-                    CASE
-                        WHEN c.gamertag IS NOT NULL THEN 'Sí'
-                        ELSE 'No'
-                    END AS es_capitan
-                    FROM jugadores j
-                    NATURAL JOIN  pertenece_a p
-                    JOIN equipos e ON p.id_equipo = e.id_equipo
-                    LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
-                    WHERE j.gamertag LIKE %(gamertag)s AND j.pais = %(pais)s '''
-        cur.execute(query, {'gamertag': '%{}%'.format(gamertag), 'pais': pais})
-    else:
-        query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
-                    CASE
-                        WHEN c.gamertag IS NOT NULL THEN 'Sí'
-                        ELSE 'No'
-                    END AS es_capitan
-                    FROM jugadores j
-                    NATURAL JOIN  pertenece_a p
-                    JOIN equipos e ON p.id_equipo = e.id_equipo
-                    LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
-                    WHERE j.gamertag LIKE %(gamertag)s '''
-        cur.execute(query, {'gamertag': '%{}%'.format(gamertag)})
 
-    jugadores = cur.fetchall()
-    jugadores = [{
-                "gamertag": f[0],
-                "pais": f[1],
-                "nombre_equipo": f[2],
-                "es_capitan": f[3]} for f in jugadores]
-    cur.execute('SELECT DISTINCT pais FROM jugadores')
-    paises = [x[0] for x in cur.fetchall()]
-    cur.close()
-    conn.close()
-    return render_template("busqueda.html", resultados=jugadores, paises=paises)
+# BUSQUEDA JUGADORES
+    if pais is not None:
+        print('gamertag buscado:', type(gamertag))
+        if pais != 'todos':
+            query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
+                        CASE
+                            WHEN c.gamertag IS NOT NULL THEN 'Sí'
+                            ELSE 'No'
+                        END AS es_capitan
+                        FROM jugadores j
+                        NATURAL JOIN  pertenece_a p
+                        JOIN equipos e ON p.id_equipo = e.id_equipo
+                        LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
+                        WHERE j.gamertag LIKE %(gamertag)s AND j.pais = %(pais)s
+                        ORDER BY j.gamertag'''
+            cur.execute(query, {'gamertag': '%{}%'.format(gamertag), 'pais': pais})
+        else:
+            query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
+                        CASE
+                            WHEN c.gamertag IS NOT NULL THEN 'Sí'
+                            ELSE 'No'
+                        END AS es_capitan
+                        FROM jugadores j
+                        NATURAL JOIN  pertenece_a p
+                        JOIN equipos e ON p.id_equipo = e.id_equipo
+                        LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
+                        WHERE j.gamertag LIKE %(gamertag)s
+                        ORDER BY j.gamertag'''
+            cur.execute(query, {'gamertag': '%{}%'.format(gamertag)})
+
+        jugadores = cur.fetchall()
+
+        jugadores = [{
+                    "gamertag": f[0],
+                    "pais": f[1],
+                    "equipo": f[2],
+                    "es_capitan": f[3]} for f in jugadores]
+        cur.execute('SELECT DISTINCT pais FROM jugadores')
+        paises = [x[0] for x in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return render_template("busqueda.html", resultados=jugadores, paises=paises)
+
+# BUSQUEDA DE EQUIPOS
+    if nombre_equipo is not None:
+        print(f'equipo buscado: {type(nombre_equipo)}')
+        query = '''SELECT e.nombre, e.fecha_creacion
+                FROM equipos e
+                WHERE UPPER(e.nombre) LIKE UPPER(%(nombre_equipo)s)'''
+        cur.execute(query, {'nombre_equipo': '%{}%'.format(nombre_equipo)})
+        equipos = cur.fetchall()
+        equipos = [{'nombre_equipo': x[0], 'fecha_creacion': x[1]}
+                   for x in equipos]
+        cur.execute('SELECT DISTINCT pais FROM jugadores')
+        paises = [x[0] for x in cur.fetchall()]
+        cur.close()
+        conn.close()
+        print(f'equipos: {equipos}')
+        return render_template('busqueda.html',
+                               resultados_equipos=equipos, paises=paises)
+    else:
+        cur.close()
+        conn.close()
+        return render_template('busqueda.html')
+
+@app.route('/estadisticas', methods=['GET'])
+def estadisticas():
+    conn = conectar_a_bdd()
+    cur = conn.cursor()
+    torneo_id = request.args.get('torneo_id')
+    equipo_id = request.args.get('equipo_id')
+    
+    cur.execute('''SELECT nombre, id_equipo
+                FROM equipos''')
+    equipos = [{'nombre': x[0], 'id_equipo': x[1]} for x in cur.fetchall()]
+
+    cur.execute('''SELECT nombre, id_torneo
+                FROM torneos''')
+    torneos = [{'nombre': x[0], 'id_torneo': x[1]} for x in cur.fetchall()]
+
+    if torneo_id is None and equipo_id is None:
+        return render_template("estadisticas.html",
+                               equipos=equipos, torneos=torneos)
+
+    elif torneo_id is not None:
+        cur.execute('''
+            SELECT j.gamertag, eq.nombre, SUM(e.ko) AS "KOs",
+                SUM(e.restarts) AS "Restarts",
+                SUM(e.asists) AS "Assists",
+                ROUND(SUM(e.ko)*1.0/SUM(e.asists),2) AS "Ratio" 
+            FROM jugadores j, estadisticas_individuales e, 
+                partidas pex, pertenece_a per, equipos eq
+            WHERE j.gamertag=per.gamertag 
+                AND per.id_equipo=eq.id_equipo
+                AND j.gamertag=e.gamertag
+                AND e.id_partida=pex.id_partida
+                AND pex.id_torneo=%s
+                AND j.gamertag IN (
+                    SELECT j.gamertag
+                    FROM jugadores j, estadisticas_individuales e, 
+                    partidas pin
+                    WHERE j.gamertag=e.gamertag 
+                        AND e.id_partida=pin.id_partida 
+                        AND pin.id_torneo=pex.id_torneo
+                    GROUP BY j.gamertag
+                    HAVING COUNT(e.id_partida) > 2
+                    ORDER BY j.gamertag
+                    )
+            GROUP BY j.gamertag, eq.nombre
+                    ''', (torneo_id,))
+
 
 
 if __name__ == "__main__":
