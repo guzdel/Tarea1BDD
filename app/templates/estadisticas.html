@@ -94,14 +94,25 @@
 				{% endfor %}
 			</select>
 		</div>
+		<div class="field-group">
+			<label for="torneo_evolucion_id">Torneo</label>
+			<select id="torneo_evolucion_id" name="torneo_evolucion_id">
+				<option value="">Selecciona un torneo</option>
+				{% for torneo in torneos %}
+				<option value="{{ torneo.id_torneo }}" {% if torneo_evolucion_seleccionado and torneo.id_torneo == torneo_evolucion_seleccionado.id_torneo %}selected{% endif %}>
+					{{ torneo.nombre }}
+				</option>
+				{% endfor %}
+			</select>
+		</div>
 		<div class="field-group actions-group">
 			<button type="submit">Comparar fases</button>
 		</div>
 	</form>
 
-	{% if equipo_seleccionado %}
+	{% if equipo_seleccionado and torneo_evolucion_seleccionado %}
 	<div>
-		<h3>{{ equipo_seleccionado.nombre }}</h3>
+		<h3>{{ equipo_seleccionado.nombre }} - {{ torneo_evolucion_seleccionado.nombre }}</h3>
 	</div>
 
 	{% if evolucion_fases %}
@@ -137,7 +148,7 @@
 	<p class="empty-state">No hay datos suficientes para comparar la evolución por fase de este equipo.</p>
 	{% endif %}
 	{% else %}
-	<p class="empty-state">Selecciona un equipo para comparar su evolución por fase.</p>
+	<p class="empty-state">Selecciona un equipo y un torneo para comparar su evolución por fase.</p>
 	{% endif %}
 </section>
 {% endblock %}
