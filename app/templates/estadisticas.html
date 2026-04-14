@@ -77,7 +77,7 @@
 	<div>
 		<h3>Evolución por fase de un equipo</h3>
 		<p>
-			Compara las estadísticas promedio por jugador entre fase de grupos y fases eliminatorias
+			Compara las estadísticas de cada jugador entre fase de grupos y fases eliminatorias
 			(semifinal + final).
 		</p>
 	</div>
@@ -115,37 +115,37 @@
 		<h3>{{ equipo_seleccionado.nombre }} - {{ torneo_evolucion_seleccionado.nombre }}</h3>
 	</div>
 
-	{% if evolucion_fases %}
+	{% if evolucion_jugadores %}
 	<div class="table-wrap">
 		<table class="data-table">
 			<thead>
 				<tr>
-					<th>Métrica</th>
-					<th>Fase de grupos</th>
-					<th>Semifinal + Final</th>
+					<th>Jugador</th>
+					<th>KOs (grupos)</th>
+					<th>KOs (elim.)</th>
+					<th>Restarts (grupos)</th>
+					<th>Restarts (elim.)</th>
+					<th>Assists (grupos)</th>
+					<th>Assists (elim.)</th>
 				</tr>
 			</thead>
 			<tbody>
+				{% for jugador in evolucion_jugadores %}
 				<tr>
-					<td>KOs promedio por jugador</td>
-					<td>{{ evolucion_fases.grupos.kos }}</td>
-					<td>{{ evolucion_fases.eliminatorias.kos }}</td>
+					<td>{{ jugador.gamertag }}</td>
+					<td>{{ jugador.grupos.kos }}</td>
+					<td>{{ jugador.eliminatorias.kos }}</td>
+					<td>{{ jugador.grupos.restarts }}</td>
+					<td>{{ jugador.eliminatorias.restarts }}</td>
+					<td>{{ jugador.grupos.assists }}</td>
+					<td>{{ jugador.eliminatorias.assists }}</td>
 				</tr>
-				<tr>
-					<td>Restarts promedio por jugador</td>
-					<td>{{ evolucion_fases.grupos.restarts }}</td>
-					<td>{{ evolucion_fases.eliminatorias.restarts }}</td>
-				</tr>
-				<tr>
-					<td>Assists promedio por jugador</td>
-					<td>{{ evolucion_fases.grupos.assists }}</td>
-					<td>{{ evolucion_fases.eliminatorias.assists }}</td>
-				</tr>
+				{% endfor %}
 			</tbody>
 		</table>
 	</div>
 	{% else %}
-	<p class="empty-state">No hay datos suficientes para comparar la evolución por fase de este equipo.</p>
+	<p class="empty-state">No hay datos suficientes para comparar la evolución por jugador en este equipo y torneo.</p>
 	{% endif %}
 	{% else %}
 	<p class="empty-state">Selecciona un equipo y un torneo para comparar su evolución por fase.</p>
