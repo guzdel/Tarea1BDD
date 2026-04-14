@@ -10,8 +10,8 @@ def conectar_a_bdd():
         host=os.environ.get('DB_HOST', 'localhost'),
         port=os.environ.get('DB_PORT', 5432),
         user=os.environ.get('DB_USER', 'postgres'),
-        password=os.environ.get('DB_PASSWORD', 'Pepito18'),
-        database=os.environ.get('DB_NAME', 'postgres')
+        password=os.environ.get('DB_PASSWORD', 'postgres'),
+        database=os.environ.get('DB_NAME', 'tarea1')
     )
 
 
@@ -355,7 +355,8 @@ def estadisticas():
     torneos = [{'nombre': x[0], 'id_torneo': x[1]} for x in cur.fetchall()]
 
     if (torneo_id is None and equipo_id is None) or (
-            not torneo_id and not equipo_id):
+            not torneo_id and not equipo_id) or (
+            not equipo_id or not torneo_evolucion_id):
         cur.close()
         conn.close()
         return render_template("estadisticas.html",
@@ -407,7 +408,7 @@ def estadisticas():
             torneos=torneos, ranking_jugadores=ranking_jugadores,
             torneo_seleccionado=torneo_seleccionado)
 
-    elif equipo_id is not None and equipo_id:
+    elif equipo_id is not None and equipo_id and torneo_evolucion_id:
         cur.execute('''
                     SELECT gamertag, round(AVG(ko),2) AS ko,
                     round(AVG(restarts),2) AS restarts,
@@ -419,7 +420,11 @@ def estadisticas():
                     FROM estadisticas_individuales NATURAL JOIN partidas
                     WHERE id_torneo=%s AND (fase='final' OR fase='semifinal')
                     GROUP BY fase2, gamertag
-                    ORDER BY gamertag, fase2''', (torneo_id,))
+                    ORDER BY gamertag, fase2''', (torneo_evolucion_id,))
+        eliminatorias = cur.fetchall()
+        eliminatorias = [{
+            '
+        }]
 
 
 
