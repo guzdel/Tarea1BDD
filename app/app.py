@@ -345,17 +345,19 @@ def estadisticas():
                 FROM torneos''')
     torneos = [{'nombre': x[0], 'id_torneo': x[1]} for x in cur.fetchall()]
 
-    if torneo_id is None and equipo_id is None:
+    if (torneo_id is None and equipo_id is None) or (
+            not torneo_id and not equipo_id):
         return render_template("estadisticas.html",
                                equipos=equipos, torneos=torneos)
 
-    elif torneo_id is not None:
+    elif torneo_id is not None and torneo_id:
+        print('realizando consulta')
         cur.execute('''
             SELECT j.gamertag, eq.nombre, SUM(e.ko) AS "KOs",
                 SUM(e.restarts) AS "Restarts",
                 SUM(e.asists) AS "Assists",
-                ROUND(SUM(e.ko)*1.0/SUM(e.asists),2) AS "Ratio" 
-            FROM jugadores j, estadisticas_individuales e, 
+                ROUND(SUM(e.ko)*1.0/SUM(e.restarts),2) AS "Ratio"
+            FROM jugadores j, estadisticas_individuales e,
                 partidas pex, pertenece_a per, equipos eq
             WHERE j.gamertag=per.gamertag 
                 AND per.id_equipo=eq.id_equipo
@@ -364,7 +366,7 @@ def estadisticas():
                 AND pex.id_torneo=%s
                 AND j.gamertag IN (
                     SELECT j.gamertag
-                    FROM jugadores j, estadisticas_individuales e, 
+                    FROM jugadores j, estadisticas_individuales e,
                     partidas pin
                     WHERE j.gamertag=e.gamertag 
                         AND e.id_partida=pin.id_partida 
@@ -374,7 +376,19 @@ def estadisticas():
                     ORDER BY j.gamertag
                     )
             GROUP BY j.gamertag, eq.nombre
-                    ''', (torneo_id,))
+            ORDER BY ROUND(SUM(e.ko)*1.0/SUM(e.restarts),2) DESC
+                    ''', (int(torneo_id),))
+        ranking_jugadores = [{
+            'gamertag': x[0],
+            'equipo': x[1],
+            'total_kos': x[2],
+            'restarts': x[3],
+            'assists': x[4],
+            'ratio': x[5]} for x in cur.fetchall()]
+        print(ranking_jugadores)
+        return render_template(
+            "estadisticas.html", equipos=equipos,
+            torneos=torneos, ranking_jugadores=ranking_jugadores)
 
 
 
