@@ -4,7 +4,6 @@ import os
 
 app = Flask(__name__)
 
-
 def conectar_a_bdd():
     return psycopg2.connect(
         host=os.environ.get('DB_HOST', 'localhost'),
@@ -18,7 +17,6 @@ def conectar_a_bdd():
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 @app.route("/torneos/", methods=['GET'])
 def torneos():
@@ -37,28 +35,28 @@ def torneos():
     cur.execute('SELECT * FROM Torneos')
     torneos = cur.fetchall()
     torneos = [{
-        "id_torneo": f[0],
-        "nombre": f[1],
-        "videojuego": f[2],
-        "fecha_inicio": f[3],
-        "fecha_fin": f[4]
-    } for f in torneos]
+                "id_torneo": f[0],
+                "nombre": f[1],
+                "videojuego": f[2],
+                "fecha_inicio": f[3],
+                "fecha_fin": f[4]
+            } for f in torneos]
+
 
     torneo_id = request.args.get('torneo_id', default=None, type=int)
 
     if torneo_id != None:
 
         # info general del torneo seleccionado
-        cur.execute(
-            """SELECT * FROM Torneos WHERE id_torneo = %s""", (torneo_id,))
+        cur.execute("""SELECT * FROM Torneos WHERE id_torneo = %s""", (torneo_id,))
         ts = cur.fetchone()
         torneo_seleccionado = {
-            "id_torneo": ts[0],
-            "nombre": ts[1],
-            "videojuego": ts[2],
-            "fecha_inicio": ts[3],
-            "fecha_fin": ts[4]
-        }
+                "id_torneo": ts[0],
+                "nombre": ts[1],
+                "videojuego": ts[2],
+                "fecha_inicio": ts[3],
+                "fecha_fin": ts[4]
+            }
 
         # Partidas del torneo
         cur.execute("""SELECT p.fecha, e1.nombre, p.puntaje_a, p.puntaje_b, e2.nombre
@@ -69,14 +67,14 @@ def torneos():
             ORDER BY p.fecha, p.hora""", (torneo_id,))
         partidas = cur.fetchall()
         partidas = [
-            {
-                "fecha": f[0],
-                "equipo_local": f[1],
-                "marcador_local": f[2],
-                "marcador_visitante": f[3],
-                "equipo_visitante": f[4]
-            }
-            for f in partidas]
+                {
+                    "fecha": f[0],
+                    "equipo_a": f[1],
+                    "marcador_a": f[2],
+                    "marcador_b": f[3],
+                    "equipo_b": f[4]
+                }
+                for f in partidas]
 
         # Equipos inscritos
         cur.execute("""SELECT e.nombre 
@@ -111,25 +109,23 @@ def torneos():
                     """, (torneo_id, torneo_id))
 
         tabla_grupos = [{"equipo": f[0],
-                         "jugadas": f[1],
-                         "ganadas": f[2],
-                         "empatadas": f[3],
-                         "perdidas": f[4],
-                         "puntos": f[5]} for f in cur.fetchall()]
+                          "jugadas": f[1],
+                          "ganadas": f[2],
+                          "empatadas": f[3],
+                          "perdidas": f[4],
+                          "puntos": f[5]} for f in cur.fetchall()]
 
     cur.close()
     conn.close()
     return render_template("torneos.html",
-                           torneos=torneos,
-                           torneo_seleccionado=torneo_seleccionado,
-                           partidas=partidas,
-                           tabla_grupos=tabla_grupos,
-                           equipos_inscritos=equipos_inscritos,
-                           sponsors=sponsors)
+        torneos=torneos,
+        torneo_seleccionado=torneo_seleccionado,
+        partidas=partidas,
+        tabla_grupos=tabla_grupos,
+        equipos_inscritos=equipos_inscritos,
+        sponsors=sponsors)
 
 # INSCRIPCIÓN
-
-
 @app.route('/inscripcion', methods=['GET', 'POST'])
 def inscribir():
     torneos = None
@@ -166,7 +162,7 @@ def inscribir():
                     VALUES (%s, %s)
                 """, (torneo_seleccionado_id, equipo_seleccionado_id))
                     conn.commit()
-                    success_message = 'Se realizo correctamente la inscripción'
+                    success_message = '200'
                 except Exception as e:
                     error_message = f"No se pudo realizar la inscripción: {e}"
             else:
@@ -177,12 +173,12 @@ def inscribir():
     cur.execute('SELECT * FROM Torneos')
     torneos = cur.fetchall()
     torneos = [{
-        "id_torneo": f[0],
-        "nombre": f[1],
-        "videojuego": f[2],
-        "fecha_inicio": f[3],
-        "fecha_fin": f[4]
-    } for f in torneos]
+                "id_torneo": f[0],
+                "nombre": f[1],
+                "videojuego": f[2],
+                "fecha_inicio": f[3],
+                "fecha_fin": f[4]
+            } for f in torneos]
 
     cur.execute('SELECT id_equipo, nombre FROM Equipos')
     filas_equipos = cur.fetchall()
@@ -221,8 +217,6 @@ def inscribir():
         equipo_seleccionado_id=equipo_seleccionado_id)
 
 # SPONSORS
-
-
 @app.route('/sponsors', methods=['GET'])
 def mostrar_sponsors():
     videojuego_seleccionado = request.args.get(
@@ -286,8 +280,7 @@ def busqueda():
                         LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
                         WHERE j.gamertag LIKE %(gamertag)s AND j.pais = %(pais)s
                         ORDER BY j.gamertag'''
-            cur.execute(
-                query, {'gamertag': '%{}%'.format(gamertag), 'pais': pais})
+            cur.execute(query, {'gamertag': '%{}%'.format(gamertag), 'pais': pais})
         else:
             query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
                         CASE
@@ -305,10 +298,10 @@ def busqueda():
         jugadores = cur.fetchall()
 
         jugadores = [{
-            "gamertag": f[0],
-            "pais": f[1],
-            "equipo": f[2],
-            "es_capitan": f[3]} for f in jugadores]
+                    "gamertag": f[0],
+                    "pais": f[1],
+                    "equipo": f[2],
+                    "es_capitan": f[3]} for f in jugadores]
         cur.execute('SELECT DISTINCT pais FROM jugadores')
         paises = [x[0] for x in cur.fetchall()]
         cur.close()
@@ -337,15 +330,13 @@ def busqueda():
         conn.close()
         return render_template('busqueda.html')
 
-
 @app.route('/estadisticas', methods=['GET'])
 def estadisticas():
     conn = conectar_a_bdd()
     cur = conn.cursor()
-    torneo_id = request.args.get('torneo_id', type=int)
-    equipo_id = request.args.get('equipo_id', type=int)
-    torneo_evolucion_id = request.args.get('torneo_evolucion_id', type=int)
-
+    torneo_id = request.args.get('torneo_id')
+    equipo_id = request.args.get('equipo_id')
+    
     cur.execute('''SELECT nombre, id_equipo
                 FROM equipos''')
     equipos = [{'nombre': x[0], 'id_equipo': x[1]} for x in cur.fetchall()]
@@ -405,6 +396,7 @@ def estadisticas():
         conn.close()
         return render_template(
             "estadisticas.html", equipos=equipos,
+            torneos=torneos, ranking_jugadores=ranking_jugadores)
             torneos=torneos, ranking_jugadores=ranking_jugadores,
             torneo_seleccionado=torneo_seleccionado)
 
