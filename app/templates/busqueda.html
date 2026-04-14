@@ -88,8 +88,7 @@
 	<div>
 		<h2 class="section-title">Búsqueda de Equipos</h2>
 		<p>
-			Busca equipos por su nombre y consulta su fecha de creación junto con el torneo
-			al que están inscritos.
+			Busca equipos por su nombre y conoce su fecha de creación.
 		</p>
 	</div>
 
@@ -125,15 +124,13 @@
 				<tr>
 					<th>Nombre</th>
 					<th>Fecha de creación</th>
-					<th>Torneo inscrito</th>
 				</tr>
 			</thead>
 			<tbody>
 				{% for equipo in resultados_equipos %}
 				<tr>
-					<td>{{ equipo.nombre }}</td>
+					<td>{{ equipo.nombre_equipo }}</td>
 					<td>{{ equipo.fecha_creacion or "-" }}</td>
-					<td>{{ equipo.torneo_inscrito or "-" }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>
