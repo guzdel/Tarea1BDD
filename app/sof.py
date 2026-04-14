@@ -158,17 +158,16 @@ def inscribir():
             if max_inscripcion > n_actuales and equipo_seleccionado_id not in inscritos_actuales:
                 try:
                     cur.execute("""
-                    INSERT INTO Inscripcion (id_torneo, id_equipo)
-                    VALUES (%s, %s)
-                """, (torneo_seleccionado_id, equipo_seleccionado_id))
+                                INSERT INTO inscripcion (id_torneo, id_equipo)
+                                VALUES (%s, %s)""", (torneo_seleccionado_id, equipo_seleccionado_id))
                     conn.commit()
-                    success_message = '200'
+                    success_message = 'Inscrito con éxito'
                 except Exception as e:
-                    error_message = f"No se pudo realizar la inscripción: {e}"
+                    error_message = f"Error en la base de datos: {e}, No se pudo realizar la inscripción"
             else:
-                error_message = f"No se pudo realizar la inscripción"
+                error_message = f"Error: Se supera el máximo de inscritos o el equipo ya estaba inscrito."
         else:
-            error_message = f"No se pudo realizar la inscripción"
+            error_message = f"Error: No se seleccionó correctamente un equipo y/o torneo"
     
     cur.execute('SELECT * FROM Torneos')
     torneos = cur.fetchall()
