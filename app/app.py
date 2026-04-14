@@ -280,7 +280,8 @@ def busqueda():
                         LEFT JOIN es_capitan c ON c.gamertag = j.gamertag
                         WHERE j.gamertag LIKE %(gamertag)s AND j.pais = %(pais)s
                         ORDER BY j.gamertag'''
-            cur.execute(query, {'gamertag': '%{}%'.format(gamertag), 'pais': pais})
+            cur.execute(
+                query, {'gamertag': '%{}%'.format(gamertag), 'pais': pais})
         else:
             query = '''SELECT j.gamertag, j.pais, e.nombre AS nombre_equipo,
                         CASE
@@ -298,10 +299,10 @@ def busqueda():
         jugadores = cur.fetchall()
 
         jugadores = [{
-                    "gamertag": f[0],
-                    "pais": f[1],
-                    "equipo": f[2],
-                    "es_capitan": f[3]} for f in jugadores]
+            "gamertag": f[0],
+            "pais": f[1],
+            "equipo": f[2],
+            "es_capitan": f[3]} for f in jugadores]
         cur.execute('SELECT DISTINCT pais FROM jugadores')
         paises = [x[0] for x in cur.fetchall()]
         cur.close()
@@ -330,13 +331,15 @@ def busqueda():
         conn.close()
         return render_template('busqueda.html')
 
+
 @app.route('/estadisticas', methods=['GET'])
 def estadisticas():
     conn = conectar_a_bdd()
     cur = conn.cursor()
-    torneo_id = request.args.get('torneo_id')
-    equipo_id = request.args.get('equipo_id')
-    
+    torneo_id = request.args.get('torneo_id', type=int)
+    equipo_id = request.args.get('equipo_id', type=int)
+    torneo_evolucion_id = request.args.get('torneo_evolucion_id', type=int)
+
     cur.execute('''SELECT nombre, id_equipo
                 FROM equipos''')
     equipos = [{'nombre': x[0], 'id_equipo': x[1]} for x in cur.fetchall()]
@@ -346,8 +349,7 @@ def estadisticas():
     torneos = [{'nombre': x[0], 'id_torneo': x[1]} for x in cur.fetchall()]
 
     if (torneo_id is None and equipo_id is None) or (
-            not torneo_id and not equipo_id) or (
-            not equipo_id or not torneo_evolucion_id):
+            not torneo_id and not equipo_id):
         cur.close()
         conn.close()
         return render_template("estadisticas.html",
@@ -392,33 +394,69 @@ def estadisticas():
         for torneo_dict in torneos:
             if torneo_dict['id_torneo'] == int(torneo_id):
                 torneo_seleccionado = torneo_dict
+                break
         cur.close()
         conn.close()
         return render_template(
             "estadisticas.html", equipos=equipos,
-            torneos=torneos, ranking_jugadores=ranking_jugadores)
             torneos=torneos, ranking_jugadores=ranking_jugadores,
             torneo_seleccionado=torneo_seleccionado)
+    
+    elif not equipo_id and not torneo_evolucion_id:
+        cur.close()
+        conn.close()
+        return render_template("estadisticas.html",
+                               equipos=equipos, torneos=torneos)
 
     elif equipo_id is not None and equipo_id and torneo_evolucion_id:
         cur.execute('''
-                    SELECT gamertag, round(AVG(ko),2) AS ko,
-                    round(AVG(restarts),2) AS restarts,
-                    round(AVG(asists),2) AS asists,
-                        CASE
-                            WHEN fase='final' OR fase='semifinal' THEN 'Eliminatorias'
-                            ELSE 'Grupos'
-                        END AS fase2
-                    FROM estadisticas_individuales NATURAL JOIN partidas
-                    WHERE id_torneo=%s AND (fase='final' OR fase='semifinal')
-                    GROUP BY fase2, gamertag
-                    ORDER BY gamertag, fase2''', (torneo_evolucion_id,))
-        eliminatorias = cur.fetchall()
-        eliminatorias = [{
-            '
-        }]
+                SELECT
+                    e.gamertag,
+                    ROUND(AVG(CASE WHEN p.fase = 'grupos' THEN e.ko END), 2) AS ko_grupos,
+                    ROUND(AVG(CASE WHEN p.fase = 'grupos' THEN e.restarts END), 2) AS restarts_grupos,
+                    ROUND(AVG(CASE WHEN p.fase = 'grupos' THEN e.asists END), 2) AS asists_grupos,
+                    
+                    ROUND(AVG(CASE WHEN p.fase IN ('semifinal', 'final') THEN e.ko END), 2) AS ko_eliminatorias,
+                    ROUND(AVG(CASE WHEN p.fase IN ('semifinal', 'final') THEN e.restarts END), 2) AS restarts_eliminatorias,
+                    ROUND(AVG(CASE WHEN p.fase IN ('semifinal', 'final') THEN e.asists END), 2) AS asists_eliminatorias
+                
+                FROM estadisticas_individuales e
+                JOIN partidas p ON e.id_partida = p.id_partida, pertenece_a pe
+                WHERE p.id_torneo = %(torneo_evolucion_id)s AND e.gamertag = pe.gamertag
+                    AND pe.id_equipo = %(equipo_id)s
+                GROUP BY e.gamertag
+                ORDER BY e.gamertag;''', {'torneo_evolucion_id': torneo_evolucion_id,
+                                          'equipo_id': equipo_id})
+        evolucion_jugadores = cur.fetchall()
+        evolucion_jugadores = [{
+            'gamertag': x[0],
+            'grupos_kos': x[1],
+            'eliminatorias_kos': x[2],
+            'grupos_restarts': x[3],
+            'eliminatorias_restarts': x[4],
+            'grupos_assists': x[5],
+            'eliminatorias_assists': x[6]
+        } for x in evolucion_jugadores]
+        cur.close()
+        conn.close()
+        for torneo in torneos:
+            if torneo['id_torneo'] == int(torneo_evolucion_id):
+                torneo_evolucion_seleccionado = torneo
+                break
+        for equipo in equipos:
+            if equipo['id_equipo'] == int(equipo_id):
+                equipo_seleccionado = equipo
+        return render_template(
+            "estadisticas.html", equipos=equipos,
+            torneos=torneos,
+            evolucion_jugadores=evolucion_jugadores,
+            equipo_seleccionado=equipo_seleccionado,
+            torneo_evolucion_seleccionado=torneo_evolucion_seleccionado)
 
-
+    cur.close()
+    conn.close()
+    return render_template("estadisticas.html",
+                            equipos=equipos, torneos=torneos)
 
 if __name__ == "__main__":
     app.run(debug=True)
