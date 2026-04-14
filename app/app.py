@@ -347,6 +347,8 @@ def estadisticas():
 
     if (torneo_id is None and equipo_id is None) or (
             not torneo_id and not equipo_id):
+        cur.close()
+        conn.close()
         return render_template("estadisticas.html",
                                equipos=equipos, torneos=torneos)
 
@@ -363,7 +365,7 @@ def estadisticas():
                 AND per.id_equipo=eq.id_equipo
                 AND j.gamertag=e.gamertag
                 AND e.id_partida=pex.id_partida
-                AND pex.id_torneo=%s
+                AND pex.id_torneo=%(torneo_id)s
                 AND j.gamertag IN (
                     SELECT j.gamertag
                     FROM jugadores j, estadisticas_individuales e,
@@ -377,7 +379,7 @@ def estadisticas():
                     )
             GROUP BY j.gamertag, eq.nombre
             ORDER BY ROUND(SUM(e.ko)*1.0/SUM(e.restarts),2) DESC
-                    ''', (int(torneo_id),))
+                    ''', {'torneo_id': int(torneo_id)})
         ranking_jugadores = [{
             'gamertag': x[0],
             'equipo': x[1],
@@ -385,10 +387,34 @@ def estadisticas():
             'restarts': x[3],
             'assists': x[4],
             'ratio': x[5]} for x in cur.fetchall()]
-        print(ranking_jugadores)
+        print(torneos)
+        for torneo_dict in torneos:
+            if torneo_dict['id_torneo'] == int(torneo_id):
+                torneo_seleccionado = torneo_dict
+        cur.close()
+        conn.close()
         return render_template(
             "estadisticas.html", equipos=equipos,
+<<<<<<< HEAD
             torneos=torneos, ranking_jugadores=ranking_jugadores)
+=======
+            torneos=torneos, ranking_jugadores=ranking_jugadores,
+            torneo_seleccionado=torneo_seleccionado)
+
+    elif equipo_id is not None and equipo_id:
+        cur.execute('''
+                    SELECT gamertag, round(AVG(ko),2) AS ko,
+                    round(AVG(restarts),2) AS restarts,
+                    round(AVG(asists),2) AS asists,
+                        CASE
+                            WHEN fase='final' OR fase='semifinal' THEN 'Eliminatorias'
+                            ELSE 'Grupos'
+                        END AS fase2
+                    FROM estadisticas_individuales NATURAL JOIN partidas
+                    WHERE id_torneo=%s AND (fase='final' OR fase='semifinal')
+                    GROUP BY fase2, gamertag
+                    ORDER BY gamertag, fase2''', (torneo_id,))
+>>>>>>> 6306b78c1f5fc9baef2d105977fe2490ff1acf06
 
 
 
