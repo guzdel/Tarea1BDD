@@ -69,10 +69,10 @@ def torneos():
         partidas = [
                 {
                     "fecha": f[0],
-                    "equipo_local": f[1],
-                    "marcador_local": f[2],
-                    "marcador_visitante": f[3],
-                    "equipo_visitante": f[4]
+                    "equipo_a": f[1],
+                    "marcador_a": f[2],
+                    "marcador_b": f[3],
+                    "equipo_b": f[4]
                 }
                 for f in partidas]
 
@@ -395,9 +395,7 @@ def estadisticas():
         conn.close()
         return render_template(
             "estadisticas.html", equipos=equipos,
-<<<<<<< HEAD
             torneos=torneos, ranking_jugadores=ranking_jugadores)
-=======
             torneos=torneos, ranking_jugadores=ranking_jugadores,
             torneo_seleccionado=torneo_seleccionado)
 
@@ -414,7 +412,6 @@ def estadisticas():
                     WHERE id_torneo=%s AND (fase='final' OR fase='semifinal')
                     GROUP BY fase2, gamertag
                     ORDER BY gamertag, fase2''', (torneo_id,))
->>>>>>> 6306b78c1f5fc9baef2d105977fe2490ff1acf06
 
 
 

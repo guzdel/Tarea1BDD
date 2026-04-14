@@ -85,18 +85,18 @@
 				<thead>
 					<tr>
 						<th>Fecha</th>
-						<th>Equipo Local</th>
+						<th>Equipo A</th>
 						<th>Resultado</th>
-						<th>Equipo Visitante</th>
+						<th>Equipo B</th>
 					</tr>
 				</thead>
 				<tbody>
 					{% for partida in partidas %}
 					<tr>
 						<td>{{ partida.fecha }}</td>
-						<td>{{ partida.equipo_local }}</td>
-						<td>{{ partida.marcador_local }} - {{ partida.marcador_visitante }}</td>
-						<td>{{ partida.equipo_visitante }}</td>
+						<td>{{ partida.equipo_a }}</td>
+						<td>{{ partida.marcador_a }} - {{ partida.marcador_b }}</td>
+						<td>{{ partida.equipo_b }}</td>
 					</tr>
 					{% endfor %}
 				</tbody>
